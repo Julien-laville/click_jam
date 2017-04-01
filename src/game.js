@@ -75,6 +75,7 @@ Resource.prototype.draw = function() {
 resources.push(new Resource(new v2d(screenWidth/2,screenHeight/2), 100, 1))
 
 function Agent() {
+    this.isActive = false
     this.pos = new v2d(0,0)
     this.type = AGENT_MO
     this.speed = new v2d(0.1, 0.1)
@@ -82,14 +83,29 @@ function Agent() {
 }
 
 Agent.prototype.draw = function() {
-    square(this.pos,30)
+    if(this.isActive) {
+        square(this.pos,30)
+    }
     
 }
 
 Agent.prototype.live = function() {
-    if(this.type === AGENT_MO) {
-        //rand aim
-        this.pos.add(this.speed) 
+    if(this.isActive) {
+        if(this.type === AGENT_MO) {
+            //rand aim
+            this.pos.add(this.speed) 
+        }
+    }
+}
+
+Agent.prototype.activate() {
+    this.isActive = true
+}
+
+agentAction(agentID) {
+    var agent = agents[agentID]
+    if(!agent.isActive && score >= agent.price) {
+        agent.activate()
     }
 }
 
