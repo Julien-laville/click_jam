@@ -63,7 +63,7 @@ function Resource(pos,total,clickPoint) {
     this.total = total
 }
 
-Resource.prototype.isClicked = function(e) {
+Resource.prototype.isClicked = function(event) {
     if(event.x-this.pos.x < RESOURCE_SIZE && event.y-this.pos.y < RESOURCE_SIZE) {
         return true
     }
