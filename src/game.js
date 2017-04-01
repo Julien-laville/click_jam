@@ -24,7 +24,7 @@ Mo5 is stupid, just occasionaly say is own name move like an alcoolic collect ha
 */
 
 var frameHandler=-1
-
+var playerCollectSize = 1
 
 var gameState = GAME_STATE_RUN
 
@@ -61,6 +61,7 @@ function Resource(pos,total,clickPoint) {
     this.pos = pos
     this.clickPoint = clickPoint
     this.total = total
+    this.available = total
 }
 
 Resource.prototype.isClicked = function(event) {
@@ -70,9 +71,19 @@ Resource.prototype.isClicked = function(event) {
     return false
 }
 
+Resource.prototype.collect = function(resource) {
+    if(this.available >= resource) {
+        this.available -= resource
+        return resource
+    }
+    var removed = this.available
+    this.available = 0
+    return removed
+}
+
 Resource.prototype.draw = function() {
     circle(this.pos,RESOURCE_SIZE)
-    text(this.pos,this.clickPoint + ' | ' + this.total)
+    text(this.pos,this.clickPoint + ' | ' + this.available)
 }
 
 resources.push(new Resource(new v2d(screenWidth/2,screenHeight/2), 100, 1))
@@ -99,13 +110,13 @@ Agent.prototype.draw = function() {
         //drawBar()
 
         if(debug === true) {
-            debugLine(this.pos,this.speed)
+            debugLine(this.pos,this.speed, '#f00', true)
         }
 
     }
 }
 
-Agent.prototype.isClicked = function(e) {
+Agent.prototype.isClicked = function(event) {
     if(event.x-this.pos.x < AGENT_SIZE && event.y-this.pos.y < AGENT_SIZE) {
         return true
     }
@@ -124,8 +135,11 @@ Agent.prototype.live = function() {
         }
 
         for(var j = 0; j < resources.length; j++) {
-            if(this.pos.stance(resources[j]) < this.collectRadius) {
+            if(this.pos.stance(resources[j].pos) < this.collectRadius) {
                 this.collect()
+                if(debug === true) {
+                    debugLine(resources[j].pos, new v2d(0,0), "#0f0", false)
+                }
             }
         }
     }
@@ -152,13 +166,13 @@ function agentAction(agentID) {
 }
 
 
-
+var collected = 0
 
 function clickAction(e) {
    for(var i = 0; i < resources.length; i ++) {
         if(resources[i].isClicked(e)) {
-            score++
-            resources[i].total--
+            collected = resources[i].collect(playerCollectSize)
+            score += collected
         }   
     }
 
@@ -242,7 +256,7 @@ function emptySquare(pos, size) {
 
 
 var vectTmp = new v2d(0,0)
-function debugLine(origin, vector) {
+function debugLine(origin, vector, color, drawValue) {
     vectTmp.setVector(vector)
     vectTmp.normalize()
     vectTmp.scale(40)
@@ -250,10 +264,14 @@ function debugLine(origin, vector) {
     ctx.moveTo(origin.x, origin.y)
     vectTmp.add(origin)
     ctx.lineTo(vectTmp.x, vectTmp.y)
-    ctx.font = '11px arial'
-    ctx.fillText(vector.x + '|' + vector.y, origin.x, origin.y)
 
-    ctx.strokeStyle = "#f00"
+
+    ctx.strokeStyle = color
     ctx.stroke()
+
+    if(drawValue) {
+        ctx.font = '11px arial'
+        ctx.fillText(vector.x + '|' + vector.y, origin.x, origin.y)
+    }
 
 }
