@@ -50,8 +50,8 @@ screen.onclick = function(event) {
 window.onresize = function() {
     screenWidth = window.innerWidth
     screenHeight = window.innerHeight
-    screen.width = screenWidth + 'px' 
-    screen.height = screenHeight + 'px'
+    screen.width = screenWidt
+    screen.height = screenHeight
 }
 
 var score = 0
@@ -169,8 +169,9 @@ function clickAction(e) {
     }
 }
 
-
+var time = performance.now()
 function loop() {
+    time = performance.now - time
     for(var i = 0; i < agents.length; i++) {
         agents[i].live()
     }
