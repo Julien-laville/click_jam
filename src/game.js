@@ -1,4 +1,5 @@
 var RESOURCE_SIZE = 40
+var AGENT_SIZE = 40
 var color1 = '#444'
 var color2 = '#777'
 
@@ -12,6 +13,8 @@ screen.height = screenHeight
 var ctx =  screen.getContext('2d')
 var debug = true
 
+AGENT_MO = 0
+
 GAME_STATE_RUN = 1
 GAME_STATE_PAUSE = 2
 GAME_STATE_MAIN = 3
@@ -19,7 +22,7 @@ GAME_STATE_MAIN = 3
 /*
 Mo5 is stupid, just occasionaly say is own name move like an alcoolic collect has he enter on ressource radius
 */
-AGENT_MO = 1
+
 var frameHandler=-1
 
 
@@ -74,23 +77,43 @@ Resource.prototype.draw = function() {
 
 resources.push(new Resource(new v2d(screenWidth/2,screenHeight/2), 100, 1))
 
-function Agent() {
+function Agent(type) {
+    this.price = 0
+    this.type = type
     this.isActive = false
     this.pos = new v2d(0,0)
-    this.type = AGENT_MO
     this.speed = new v2d(0.1, 0.1)
 
 }
 
 Agent.prototype.draw = function() {
-    if(this.isActive) {
-        square(this.pos,30)
+    if(this.isActive === true) {
+        square(this.pos, AGENT_SIZE)
+
+        if(this.isSelected === true) {
+            emptySquare(this.pos, AGENT_SIZE + 10)
+        }
+
+        if(debug === true) {
+            debugLine(this.pos,this.speed)
+        }
+
     }
-    
+}
+
+Agent.prototype.isClicked = function(e) {
+    if(event.x-this.pos.x < AGENT_SIZE && event.y-this.pos.y < AGENT_SIZE) {
+        return true
+    }
+    return false
+}
+
+Agent.prototype.select = function () {
+    this.isSelected = true
 }
 
 Agent.prototype.live = function() {
-    if(this.isActive) {
+    if(this.isActive === true) {
         if(this.type === AGENT_MO) {
             //rand aim
             this.pos.add(this.speed) 
@@ -98,18 +121,19 @@ Agent.prototype.live = function() {
     }
 }
 
-Agent.prototype.activate() {
+Agent.prototype.activate = function() {
     this.isActive = true
 }
 
-agentAction(agentID) {
+agents.push(new Agent(AGENT_MO))
+
+function agentAction(agentID) {
     var agent = agents[agentID]
     if(!agent.isActive && score >= agent.price) {
         agent.activate()
     }
 }
 
-agents.push(new Agent())
 
 
 
@@ -119,6 +143,12 @@ function clickAction(e) {
             score++
             resources[i].total--
         }   
+    }
+
+    for(var i = 0; i < agents.length; i++) {
+        if(agents[i].isClicked(e)) {
+            agents[i].select()
+        }
     }
 }
 
@@ -173,4 +203,39 @@ function square(pos, size){
     ctx.fillRect(pos.x,pos.y,size,size)
 }
 
-function line(pos)
+function emptySquare(pos, size) {
+    ctx.beginPath()
+    ctx.strokeStyle = color2
+    ctx.rect(pos.x,pos.y, size,size)
+    ctx.stroke()
+}
+
+
+
+function line(origin, destination) {
+    ctx.beginPath()
+    ctx.moveTo(origin.x, origin.y)
+    ctx.lineTo(destination.x, destination.y)
+}
+
+
+
+/* debug helper :  */
+
+
+var vectTmp = new v2d(0,0)
+function debugLine(origin, vector) {
+    vectTmp.setVector(vector)
+    vectTmp.normalize()
+    vectTmp.scale(40)
+    ctx.beginPath()
+    ctx.moveTo(origin.x, origin.y)
+    vectTmp.add(origin)
+    ctx.lineTo(vectTmp.x, vectTmp.y)
+    ctx.font = '11px arial'
+    ctx.fillText(vector.x + '|' + vector.y, origin.x, origin.y)
+
+    ctx.strokeStyle = "#f00"
+    ctx.stroke()
+
+}
