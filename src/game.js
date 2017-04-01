@@ -50,7 +50,7 @@ screen.onclick = function(event) {
 window.onresize = function() {
     screenWidth = window.innerWidth
     screenHeight = window.innerHeight
-    screen.width = screenWidt
+    screen.width = screenWidth
     screen.height = screenHeight
 }
 
