@@ -83,6 +83,8 @@ function Agent(type) {
     this.isActive = false
     this.pos = new v2d(0,0)
     this.speed = new v2d(0.1, 0.1)
+    this.collectRadius = 500
+    this.collectSize = 5
 
 }
 
@@ -93,6 +95,8 @@ Agent.prototype.draw = function() {
         if(this.isSelected === true) {
             emptySquare(this.pos, AGENT_SIZE + 10)
         }
+
+        //drawBar()
 
         if(debug === true) {
             debugLine(this.pos,this.speed)
@@ -118,6 +122,19 @@ Agent.prototype.live = function() {
             //rand aim
             this.pos.add(this.speed) 
         }
+
+        for(var j = 0; j < resources.length; j++) {
+            if(this.pos.stance(resources[j]) < this.collectRadius) {
+                this.collect()
+            }
+        }
+    }
+}
+var removeResource = 0
+Agent.prototype.collect = function(resource) {
+    if(this.isIddle === true) {
+        this.iddle = false
+        removeResource = resource.remove(this.collectSize)
     }
 }
 
@@ -212,7 +229,7 @@ function emptySquare(pos, size) {
 
 
 
-function line(origin, destination) {
+    function line(origin, destination) {
     ctx.beginPath()
     ctx.moveTo(origin.x, origin.y)
     ctx.lineTo(destination.x, destination.y)
