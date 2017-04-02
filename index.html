@@ -1,7 +1,12 @@
 <link rel="stylesheet" href="src/game.css"></link>
 <div id="scoreContent"></div>
-<div id="agents">
-    <div id="AGENT_0" class="agent agent--inactive" onclick="agentAction(0)">MO5</div>
+<div class="agents">
+    <div id="AGENT_0" class="agent agent-status" onclick="agentAction(0)">MO5</div>
+    <div id="AGENT_1" class="agent agent-status" onclick="agentAction(1)">MAC</div>
+</div>
+
+<div id="agentPanel" class="agent-panel">
+    <div onclick="kill()">KILL</div>
 </div>
 
 <div id="information"></div>

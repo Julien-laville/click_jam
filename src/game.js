@@ -1,7 +1,7 @@
 var RESOURCE_SIZE = 40
 var AGENT_SIZE = 40
-var color1 = '#444'
-var color2 = '#777'
+var color1 = '#deffc8'
+var color2 = '#014248'
 
 document.body.style.background = color1
 var screen = document.getElementById('screen')
@@ -13,19 +13,27 @@ screen.height = screenHeight
 var ctx =  screen.getContext('2d')
 var debug = true
 
+
+
+/*
+ Mo5 is stupid, just occasionally say is own name move like an alcoolic collect has he enter on ressource radius
+ */
 AGENT_MO = 0
+/*
+ MAC is a little bit clever, he stop when he is within range of resource or else walk randomly
+*/
+AGENT_MAC = 1
 
 GAME_STATE_RUN = 1
 GAME_STATE_PAUSE = 2
 GAME_STATE_MAIN = 3
 
-/*
-Mo5 is stupid, just occasionaly say is own name move like an alcoolic collect has he enter on ressource radius
-*/
+
+
 
 var frameHandler=-1
 var playerCollectSize = 1
-
+var currentAgent = null
 var gameState = GAME_STATE_RUN
 
 window.onkeypress =function(e) {
@@ -94,10 +102,10 @@ function Agent(type) {
     this.isActive = false
     this.pos = new v2d(0,0)
     this.speed = new v2d(0.1, 0.1)
-    this.collectRadius = 1000
+    this.collectRadius = 700
     this.collectSize = 5
     this.isIddle = true
-    this.collectTime = 3000;
+    this.collectTime = 1000;
     this.collectCD = 0;
 }
 
@@ -128,6 +136,20 @@ Agent.prototype.isClicked = function(event) {
 
 Agent.prototype.select = function () {
     this.isSelected = true
+    agentPanel.classList.add('agent-panel--active')
+    currentAgent = this
+}
+
+Agent.prototype.reset = function() {
+    this.isActive = false
+    this.pos.setPoint(0,0)
+    this.isIddle = true
+    this.collectCD = 0;
+}
+
+function kill() {
+    currentAgent.reset = false
+    agentPanel.classList.remove('agent-panel--active')
 }
 
 Agent.prototype.live = function(delta) {
@@ -143,6 +165,15 @@ Agent.prototype.live = function(delta) {
         if(this.type === AGENT_MO) {
             //rand aim
             this.pos.add(this.speed) 
+        }
+
+        if(this.type === AGENT_MAC) {
+
+            for(var i = 0; i < resources.length; i ++) {
+                if(resources[i].pos.stance(this.pos) > this.collectRadius) {
+                    this.pos.add(this.speed)
+                }
+            }
         }
 
 
@@ -171,6 +202,7 @@ Agent.prototype.activate = function() {
 }
 
 agents.push(new Agent(AGENT_MO))
+agents.push(new Agent(AGENT_MAC))
 
 function agentAction(agentID) {
     var agent = agents[agentID]

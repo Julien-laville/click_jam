@@ -16,9 +16,12 @@ CANVAS {
     width: 100%;
 }
 
-.agent {
+.agents {
     position: absolute;
     right: 0;
+}
+
+.agent {
     width: 50px;
     height: 50px;
 }
@@ -31,6 +34,18 @@ CANVAS {
 
 }
 
+#agentPanel.agent-panel--active {
+    display: block;
+}
+
+#agentPanel {
+    border:1px solid red;
+    bottom: 0;
+    position: absolute;
+    height: 100px;
+    width: 50%;
+    display: none;
+}
 
 #information {
 
