@@ -94,9 +94,11 @@ function Agent(type) {
     this.isActive = false
     this.pos = new v2d(0,0)
     this.speed = new v2d(0.1, 0.1)
-    this.collectRadius = 500
+    this.collectRadius = 1000
     this.collectSize = 5
-
+    this.isIddle = true
+    this.collectTime = 3000;
+    this.collectCD = 0;
 }
 
 Agent.prototype.draw = function() {
@@ -107,11 +109,12 @@ Agent.prototype.draw = function() {
             emptySquare(this.pos, AGENT_SIZE + 10)
         }
 
-        //drawBar()
 
         if(debug === true) {
             debugLine(this.pos,this.speed, '#f00', true)
         }
+
+        bar(this.pos, new v2d(40,10), (this.collectTime - this.collectCD) / this.collectTime * 100)
 
     }
 }
@@ -127,18 +130,27 @@ Agent.prototype.select = function () {
     this.isSelected = true
 }
 
-Agent.prototype.live = function() {
+Agent.prototype.live = function(delta) {
+    if(this.collectCD > 0) {
+        this.collectCD -= delta
+    }
+
+    if(this.collectCD <= 0) {
+        this.isIddle = true
+    }
+
     if(this.isActive === true) {
         if(this.type === AGENT_MO) {
             //rand aim
             this.pos.add(this.speed) 
         }
 
+
         for(var j = 0; j < resources.length; j++) {
             if(this.pos.stance(resources[j].pos) < this.collectRadius) {
-                this.collect()
+                this.collect(resources[j])
                 if(debug === true) {
-                    debugLine(resources[j].pos, new v2d(0,0), "#0f0", false)
+                    debugLine(this.pos, new v2d(1,0), "#0f0", false)
                 }
             }
         }
@@ -147,8 +159,10 @@ Agent.prototype.live = function() {
 var removeResource = 0
 Agent.prototype.collect = function(resource) {
     if(this.isIddle === true) {
-        this.iddle = false
-        removeResource = resource.remove(this.collectSize)
+        this.isIddle = false
+        this.collectCD = this.collectTime
+        removeResource = resource.collect(this.collectSize)
+        score += removeResource
     }
 }
 
@@ -167,7 +181,6 @@ function agentAction(agentID) {
 
 
 var collected = 0
-
 function clickAction(e) {
    for(var i = 0; i < resources.length; i ++) {
         if(resources[i].isClicked(e)) {
@@ -184,14 +197,18 @@ function clickAction(e) {
 }
 
 var time = performance.now()
+var delta = 0
 function loop() {
-    time = performance.now - time
-    for(var i = 0; i < agents.length; i++) {
-        agents[i].live()
-    }
-    
-    
+    delta = performance.now() - time
+    information.innerHTML = (1.0/(delta/1000)).toFixed(1)
+
     screen.width+=1
+
+
+    for(var i = 0; i < agents.length; i++) {
+        agents[i].live(delta)
+    }
+
     for(var i = 0; i < resources.length; i ++) {
         resources[i].draw()
     }
@@ -202,6 +219,7 @@ function loop() {
     
     scoreContent.innerHTML = score
     frameHandler = requestAnimationFrame(loop)
+    time = performance.now()
 }
 
 loop()
@@ -222,6 +240,16 @@ function circle(pos,radius) {
     ctx.lineWidth = 1
     ctx.beginPath()
     ctx.arc(pos.x,pos.y,radius,0, 2*Math.PI)
+    ctx.stroke()
+}
+
+function bar(pos, box, prop) {
+    ctx.fillStyle = color2
+    ctx.fillRect(pos.x, pos.y, box.x, box.y)
+    ctx.fillStyle = color1
+    ctx.fillRect(pos.x+1, pos.y+1, box.x - 2, box.y-2)
+    ctx.fillStyle = color2
+    ctx.fillRect(pos.x + 2, pos.y + 2, prop / 100 * box.x  , box.y - 4)
     ctx.stroke()
 }
 
