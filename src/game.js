@@ -24,6 +24,10 @@ AGENT_MO = 0
 */
 AGENT_MAC = 1
 
+
+
+FEAR_RANGE = 300
+
 GAME_STATE_RUN = 1
 GAME_STATE_PAUSE = 2
 GAME_STATE_MAIN = 3
@@ -70,6 +74,7 @@ function Resource(pos,total,clickPoint) {
     this.clickPoint = clickPoint
     this.total = total
     this.available = total
+    this.isActive = true
 }
 
 Resource.prototype.isClicked = function(event) {
@@ -80,18 +85,31 @@ Resource.prototype.isClicked = function(event) {
 }
 
 Resource.prototype.collect = function(resource) {
-    if(this.available >= resource) {
-        this.available -= resource
-        return resource
+    if(this.isActive) {
+        if(this.available >= resource) {
+            this.available -= resource
+            return resource
+        }
+        var removed = this.available
+        this.available = 0
+        this.destroy()
+        return removed
     }
-    var removed = this.available
-    this.available = 0
-    return removed
+
+    return 0
+
 }
 
 Resource.prototype.draw = function() {
-    circle(this.pos,RESOURCE_SIZE)
-    text(this.pos,this.clickPoint + ' | ' + this.available)
+    if(this.isActive === true) {
+        circle(this.pos,RESOURCE_SIZE)
+        text(this.pos,this.clickPoint + ' | ' + this.available)
+    }
+}
+
+Resource.prototype.destroy = function() {
+    this.isActive = false
+    updateResources()
 }
 
 resources.push(new Resource(new v2d(screenWidth/2,screenHeight/2), 100, 1))
@@ -102,7 +120,7 @@ function Agent(type) {
     this.isActive = false
     this.pos = new v2d(0,0)
     this.speed = new v2d(0.1, 0.1)
-    this.collectRadius = 700
+    this.collectRadius = 1200
     this.collectSize = 5
     this.isIddle = true
     this.collectTime = 1000;
@@ -140,6 +158,13 @@ Agent.prototype.select = function () {
     currentAgent = this
 }
 
+Agent.prototype.unSelect = function () {
+    this.isSelected = false
+    agentPanel.classList.remove('agent-panel--active')
+    currentAgent = null
+}
+
+
 Agent.prototype.reset = function() {
     this.isActive = false
     this.pos.setPoint(0,0)
@@ -148,7 +173,8 @@ Agent.prototype.reset = function() {
 }
 
 function kill() {
-    currentAgent.reset = false
+    propagateKill(currentAgent) // game method
+    currentAgent.reset()
     agentPanel.classList.remove('agent-panel--active')
 }
 
@@ -178,7 +204,7 @@ Agent.prototype.live = function(delta) {
 
 
         for(var j = 0; j < resources.length; j++) {
-            if(this.pos.stance(resources[j].pos) < this.collectRadius) {
+            if(this.pos.stance(resources[j].pos) < this.collectRadius && this.isIddle === true) {
                 this.collect(resources[j])
                 if(debug === true) {
                     debugLine(this.pos, new v2d(1,0), "#0f0", false)
@@ -189,12 +215,16 @@ Agent.prototype.live = function(delta) {
 }
 var removeResource = 0
 Agent.prototype.collect = function(resource) {
-    if(this.isIddle === true) {
-        this.isIddle = false
+
+    this.isIddle = false
+
+    removeResource = resource.collect(this.collectSize)
+    if(removeResource > 0) {
         this.collectCD = this.collectTime
-        removeResource = resource.collect(this.collectSize)
         score += removeResource
     }
+
+
 }
 
 Agent.prototype.activate = function() {
@@ -211,19 +241,32 @@ function agentAction(agentID) {
     }
 }
 
+stepResource = 0
+function updateResources() {
 
+}
+
+function propagateKill(agent) {
+    for(var i = 0; i < agents.length; i++) {
+        if(agents[i].pos.stance(agent.pos) < FEAR_RANGE) {
+            agents[i].fear()
+        }
+    }
+}
 var collected = 0
+
 function clickAction(e) {
-   for(var i = 0; i < resources.length; i ++) {
+    for(var i = 0; i < resources.length; i ++) {
         if(resources[i].isClicked(e)) {
             collected = resources[i].collect(playerCollectSize)
             score += collected
-        }   
+        }
     }
-
     for(var i = 0; i < agents.length; i++) {
         if(agents[i].isClicked(e)) {
             agents[i].select()
+        } else {
+            //agents[i].unSelect()
         }
     }
 }
@@ -234,7 +277,7 @@ function loop() {
     delta = performance.now() - time
     information.innerHTML = (1.0/(delta/1000)).toFixed(1)
 
-    screen.width+=1
+    screen.width+=0
 
 
     for(var i = 0; i < agents.length; i++) {
@@ -264,8 +307,6 @@ function disc(pos,radius) {
     ctx.arc(pos.x,pos.y,radius,0, 2*Math.PI)
     ctx.fill()
 }
-
-
 
 function circle(pos,radius) {
     ctx.strokeStyle = color2
