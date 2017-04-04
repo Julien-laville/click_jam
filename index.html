@@ -1,8 +1,9 @@
 <link rel="stylesheet" href="src/game.css"></link>
 <div id="scoreContent"></div>
 <div class="agents">
-    <div id="AGENT_0" class="agent agent-status" onclick="agentAction(0)">MO5</div>
-    <div id="AGENT_1" class="agent agent-status" onclick="agentAction(1)">MAC</div>
+    <div id="AGENT_0" class="agent agent-status" onclick="agentAction(0)">MO-5</div>
+    <div id="AGENT_1" class="agent agent-status" onclick="agentAction(1)">APPLE - I</div>
+    <div id="AGENT_2" class="agent agent-status" onclick="agentAction(2)">C-64</div>
 </div>
 
 <div id="agentPanel" class="agent-panel">
@@ -12,7 +13,11 @@
 <div id="information"></div>
 <canvas id="screen"></canvas>
 
-
+<script>
+    var screenWidth = window.innerWidth
+    var screenHeight = window.innerHeight
+</script>
 
 <script src="src/v2d.js"></script>
+<script src="src/data.js"></script>
 <script src="src/game.js"></script>

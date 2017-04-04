@@ -3,11 +3,11 @@ var AGENT_SIZE = 40
 var clear = '#deffc8'
 var dark = '#014248'
 
+document.documentElement.style.setProperty(`--dark`, dark);
+document.documentElement.style.setProperty(`--clear`, clear);
+
 document.body.style.background = clear
 var screen = document.getElementById('screen')
-var screenWidth = window.innerWidth
-var screenHeight = window.innerHeight
-
 screen.width = screenWidth
 screen.height = screenHeight
 var ctx =  screen.getContext('2d')
@@ -24,7 +24,13 @@ AGENT_MO = 0
 */
 AGENT_MAC = 1
 
+/*
+COMODORE 64 is the first clever IA, seeking for the nearest resource
+*/
+AGENT_64 = 2
 
+
+AGENT_SPEED = .5
 
 FEAR_RANGE = 300
 FEAR_COOLDOWN = 4000
@@ -80,7 +86,8 @@ function Resource(pos,total,clickPoint) {
 }
 
 Resource.prototype.isClicked = function(event) {
-    if(event.x-this.pos.x < RESOURCE_SIZE && event.y-this.pos.y < RESOURCE_SIZE) {
+    console.log(event.y-this.pos.x)
+    if(Math.abs(event.pageX-this.pos.x) < RESOURCE_SIZE && Math.abs(event.pageY-this.pos.y) < RESOURCE_SIZE) {
         return true
     }
     return false
@@ -104,8 +111,10 @@ Resource.prototype.collect = function(resource) {
 
 Resource.prototype.draw = function() {
     if(this.isActive === true) {
-        circle(this.pos,RESOURCE_SIZE)
-        text(this.pos,this.clickPoint + ' | ' + this.available)
+        arc(this.pos, RESOURCE_SIZE + 6, (this.available) / this.total, dark)
+        disc(this.pos, RESOURCE_SIZE, dark)
+        circle(this.pos, RESOURCE_SIZE + 6, 2, dark)
+        textCenter(this.pos,this.clickPoint, clear, RESOURCE_SIZE)
     }
 }
 
@@ -114,15 +123,17 @@ Resource.prototype.destroy = function() {
     updateResources()
 }
 
-resources.push(new Resource(new v2d(screenWidth/2,screenHeight/2), 100, 1))
+for(var i = 0; i < ressourcesPositions.length; i++) {
+    resources.push(new Resource(ressourcesPositions[i], 10 * (i + 1), 1))
+}
 
 function Agent(type) {
     this.price = 0
     this.type = type
     this.isActive = false
     this.pos = new v2d(0,0)
-    this.speed = new v2d(0.2, 0.2)
-    this.collectRadius = 1200
+    this.speed = new v2d(0.6, 0.6)
+    this.collectRadius = 120
     this.collectSize = 5
     this.isIddle = true
     this.collectTime = 1000
@@ -174,6 +185,7 @@ Agent.prototype.reset = function() {
     this.isIddle = true
     this.collectCD = 0;
     this.fearCooldown = 0;
+    document.getElementById('AGENT_' + this.type).classList.remove('agent--active')
 }
 
 function kill() {
@@ -201,7 +213,7 @@ Agent.prototype.live = function(delta) {
             fearVector.setVector(this.pos)
             fearVector.sub(this.fearOrigin)
             fearVector.normalize()
-            fearVector.scale(0.3)
+            fearVector.scale(AGENT_SPEED * 1.3)
             this.pos.add(fearVector)
             bubble(this.pos, FEAR_BUBBLE)
 
@@ -210,15 +222,53 @@ Agent.prototype.live = function(delta) {
 
         if(this.type === AGENT_MO) {
             //rand aim
+            if(this.pos.x < 0 || this.pos.x > screenWidth - AGENT_SIZE) {
+                this.speed.x = -this.speed.x
+            }
+            if(this.pos.y < 0 || this.pos.y > screenHeight - AGENT_SIZE) {
+                this.speed.y = -this.speed.y
+            }
             this.pos.add(this.speed) 
         }
 
         if(this.type === AGENT_MAC) {
-
+            var ressOnRange = false
             for(var i = 0; i < resources.length; i ++) {
-                if(resources[i].pos.stance(this.pos) > this.collectRadius) {
-                    this.pos.add(this.speed)
+                if(resources[i].isActive === true && resources[i].pos.stance(this.pos) < this.collectRadius) {
+                    ressOnRange = true
                 }
+            }
+            if(ressOnRange === false) {
+                if(this.pos.x < 0 || this.pos.x > screenWidth - AGENT_SIZE) {
+                    this.speed.x = -this.speed.x
+                }
+                if(this.pos.y < 0 || this.pos.y > screenHeight - AGENT_SIZE) {
+                    this.speed.y = -this.speed.y
+                }   
+                this.pos.add(this.speed)
+            }
+        }
+        
+        if(this.type === AGENT_64) {
+            var nearRess = resources[0]
+            var minStance = this.pos.stance(nearRess.pos)
+            var stance = 0
+            for(var i = 1; i < resources.length; i ++) {
+                if(resources[i].isActive) {
+                    var stance = this.pos.stance(resources[i].pos)
+                    if(this.pos.stance(resources[i].pos) < minStance) {
+                        minStance = stance
+                        nearRess = resources[i]
+                    }
+                }
+            }
+            
+            this.speed.setVector(nearRess.pos)
+            this.speed.sub(this.pos)
+            this.speed.normalize()
+            this.speed.scale(AGENT_SPEED)
+            if(minStance > this.collectRadius) {
+                this.pos.add(this.speed)
             }
         }
 
@@ -251,11 +301,13 @@ Agent.prototype.fear = function(fearOrigin) {
 }
 
 Agent.prototype.activate = function() {
+    document.getElementById('AGENT_' + this.type).classList.add('agent--active')
     this.isActive = true
 }
 
 agents.push(new Agent(AGENT_MO))
 agents.push(new Agent(AGENT_MAC))
+agents.push(new Agent(AGENT_64))
 
 function agentAction(agentID) {
     var agent = agents[agentID]
@@ -263,10 +315,26 @@ function agentAction(agentID) {
         agent.activate()
     }
 }
-
+var freeResources = []
+var availableResources = 0
+var toActivate = null
 stepResource = 0
 function updateResources() {
-    resources.push(new Resource(new v2d(100,100),1000,5))
+    freeResources.length = 0
+    availableResources  = 0
+    for(var i = 0; i < resources.length; i ++) {
+        if(resources[i].isActive === false) {
+            availableResources++
+            freeResources.push(resources[i])
+        }
+    }
+    if(availableResources > 1) {
+        toActivate = freeResources[Math.floor(Math.random()*availableResources)]
+        toActivate.isActive = true
+        toActivate.available = toActivate.total
+    }
+    
+    
 }
 
 function propagateKill(agent) {
@@ -327,9 +395,10 @@ loop()
 
 function grid(cellSize) {
     for(var i = 1; i < screenWidth / cellSize; i++) {
-        ctx.moveTo(0,0)
+        ctx.moveTo(i*cellSize,0)
         ctx.beginPath()
-        ctx.lineTo(50, screenHeight)
+        ctx.lineTo(i*cellSize, screenHeight)
+        ctx.stroke()
     }
 
     for(var i = 1; i < screenHeight / cellSize; i++) {
@@ -339,16 +408,16 @@ function grid(cellSize) {
     }
 }
 
-function disc(pos,radius) {
-    ctx.strokeStyle = dark
+function disc(pos,radius, style) {
+    ctx.fillStyle = style
     ctx.beginPath()
     ctx.arc(pos.x,pos.y,radius,0, 2*Math.PI)
     ctx.fill()
 }
 
-function circle(pos,radius) {
-    ctx.strokeStyle = dark
-    ctx.lineWidth = 1
+function circle(pos,radius, width, style) {
+    ctx.strokeStyle = style
+    ctx.lineWidth = width
     ctx.beginPath()
     ctx.arc(pos.x,pos.y,radius,0, 2*Math.PI)
     ctx.stroke()
@@ -364,9 +433,15 @@ function bar(pos, box, prop) {
     ctx.stroke()
 }
 
-function text(pos, text) {
+function text(pos, text, style) {
     ctx.font = "15px arial"
     ctx.fillText(text,pos.x, pos.y)
+}
+
+function textCenter(pos, text, style, width) {
+    ctx.fillStyle = style
+    ctx.textAlign = 'center'
+    ctx.fillText(text, pos.x, pos.y, width)
 }
 
 function square(pos, size){
@@ -393,6 +468,16 @@ function bubble(pos, message) {
     ctx.rect(pos.x, pos.y, 300, 50)
     ctx.stroke()
     ctx.fillText(message, pos.x, pos.y, 300)
+}
+
+function arc(pos,radius, prop, style) {
+    ctx.beginPath()
+    ctx.moveTo(pos.x, pos.y)
+    ctx.lineTo(pos.x + Math.cos(0) * radius, pos.y + Math.sin(0))
+    ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2 * prop)
+    ctx.closePath()
+    ctx.fillStyle = style
+    ctx.fill()
 }
 
 /* debug helper :  */
