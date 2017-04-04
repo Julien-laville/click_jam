@@ -236,6 +236,7 @@ function loop() {
 
     screen.width+=1
 
+    grid(100)
 
     for(var i = 0; i < agents.length; i++) {
         agents[i].live(delta)
@@ -257,6 +258,20 @@ function loop() {
 loop()
 //draw helper
 
+
+function grid(cellSize) {
+    for(var i = 1; i < screenWidth / cellSize; i++) {
+        ctx.moveTo(0,0)
+        ctx.beginPath()
+        ctx.lineTo(50, screenHeight)
+    }
+
+    for(var i = 1; i < screenHeight / cellSize; i++) {
+        ctx.moveTo(0,i*cellSize)
+        ctx.beginPath()
+        ctx.lineTo(screenWidth, i * cellSize)
+    }
+}
 
 function disc(pos,radius) {
     ctx.strokeStyle = color2
@@ -304,9 +319,9 @@ function emptySquare(pos, size) {
 
 
 
-    function line(origin, destination) {
-    ctx.beginPath()
+function line(origin, destination) {
     ctx.moveTo(origin.x, origin.y)
+    ctx.beginPath()
     ctx.lineTo(destination.x, destination.y)
 }
 
