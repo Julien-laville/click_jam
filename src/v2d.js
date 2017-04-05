@@ -54,3 +54,7 @@ function v2d(x,y) {
     v2d.prototype.norm = function() {
         return Math.hypot(this.x,this.y)
     }
+    v2d.setNorm = function(norm) {
+        this.normalize()
+        this.scale(norm)
+    }
