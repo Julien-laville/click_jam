@@ -67,6 +67,11 @@ screen.onclick = function(event) {
 }
 
 
+splashScreen.onclick = function(event) {
+    splashScreen.style.display = 'none'
+}
+
+
 window.onresize = function() {
     screenWidth = window.innerWidth
     screenHeight = window.innerHeight
@@ -95,7 +100,7 @@ Resource.prototype.isClicked = function(event) {
 
 Resource.prototype.collect = function(resource) {
     if(this.isActive) {
-        if(this.available >= resource) {
+        if(this.available > resource) {
             this.available -= resource
             return resource
         }

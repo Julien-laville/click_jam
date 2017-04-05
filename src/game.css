@@ -10,7 +10,15 @@
     box-sizing: border-box;
 }
 
-
+#splashScreen {
+    top:0;
+    position: absolute;
+    background: var(--dark);
+    width: 100%;
+    min-height: 100vh;
+    color: var(--clear);
+    padding: 50px;
+}
 
 CANVAS {
     
