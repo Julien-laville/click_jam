@@ -138,7 +138,7 @@ function Agent(type) {
     this.isIddle = true
     this.collectTime = 1000
     this.collectCD = 0
-    this.fearOrigin = null
+    this.fearOrigin = new v2d(0,0)
 }
 
 Agent.prototype.draw = function() {
@@ -160,7 +160,9 @@ Agent.prototype.draw = function() {
 }
 
 Agent.prototype.isClicked = function(event) {
-    if(event.x-this.pos.x < AGENT_SIZE && event.y-this.pos.y < AGENT_SIZE) {
+    console.log( )
+
+    if((event.pageX - this.pos.x - screen.offsetLeft < AGENT_SIZE) && (event.pageX - this.pos.x - screen.offsetLeft > 0) && (event.pageY - this.pos.y- screen.offsetTop < AGENT_SIZE) && (event.pageY - this.pos.y- screen.offsetTop > 0)) { // && Math.abs(
         return true
     }
     return false
@@ -228,7 +230,7 @@ Agent.prototype.live = function(delta) {
             if(this.pos.y < 0 || this.pos.y > screenHeight - AGENT_SIZE) {
                 this.speed.y = -this.speed.y
             }
-            this.pos.add(this.speed) 
+            this.pos.add(this.speed)
         }
 
         if(this.type === AGENT_MAC) {
@@ -244,11 +246,11 @@ Agent.prototype.live = function(delta) {
                 }
                 if(this.pos.y < 0 || this.pos.y > screenHeight - AGENT_SIZE) {
                     this.speed.y = -this.speed.y
-                }   
+                }
                 this.pos.add(this.speed)
             }
         }
-        
+
         if(this.type === AGENT_64) {
             var nearRess = resources[0]
             var minStance = this.pos.stance(nearRess.pos)
@@ -262,7 +264,7 @@ Agent.prototype.live = function(delta) {
                     }
                 }
             }
-            
+
             this.speed.setVector(nearRess.pos)
             this.speed.sub(this.pos)
             this.speed.normalize()
@@ -296,7 +298,7 @@ Agent.prototype.collect = function(resource) {
 }
 
 Agent.prototype.fear = function(fearOrigin) {
-    this.fearOrigin = fearOrigin
+    this.fearOrigin.setVector(fearOrigin)
     this.fearCooldown = FEAR_COOLDOWN
 }
 
@@ -333,13 +335,13 @@ function updateResources() {
         toActivate.isActive = true
         toActivate.available = toActivate.total
     }
-    
-    
+
+
 }
 
 function propagateKill(agent) {
     for(var i = 0; i < agents.length; i++) {
-        if(agents[i].pos.stance(agent.pos) < FEAR_RANGE) {
+        if(agents[i].pos.stance(agent.pos) < FEAR_RANGE && agents[i].type !== agent.type) {
             agents[i].fear(agent.pos)
         }
     }
@@ -398,13 +400,17 @@ function grid(cellSize) {
         ctx.moveTo(i*cellSize,0)
         ctx.beginPath()
         ctx.lineTo(i*cellSize, screenHeight)
-        ctx.stroke()
+		ctx.strokeStyle = dark
+
+		ctx.stroke()
     }
 
     for(var i = 1; i < screenHeight / cellSize; i++) {
         ctx.moveTo(0,i*cellSize)
         ctx.beginPath()
         ctx.lineTo(screenWidth, i * cellSize)
+        ctx.strokeStyle = dark
+        ctx.stroke()
     }
 }
 
@@ -467,7 +473,8 @@ function line(origin, destination) {
 function bubble(pos, message) {
     ctx.rect(pos.x, pos.y, 300, 50)
     ctx.stroke()
-    ctx.fillText(message, pos.x, pos.y, 300)
+    ctx.textAlign="center";
+    ctx.fillText(message, pos.x + 150, pos.y + 25, 300)
 }
 
 function arc(pos,radius, prop, style) {
