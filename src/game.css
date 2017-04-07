@@ -1,3 +1,8 @@
+@font-face{
+    font-family: "LipbyChonk";
+    src: url('./LipbyChonk.ttf');
+}
+
 :root {
     --clear:#FFF;
     --dark:#000
@@ -5,6 +10,7 @@
 }
 
 * {
+    font-family: "LipbyChonk";
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -46,7 +52,7 @@ CANVAS {
     text-align: center;
     line-height: 50px;
     cursor: pointer;
-    font-size: 11px;
+    font-size: 16px;
 }
 
 .agent--active {

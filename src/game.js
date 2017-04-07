@@ -510,7 +510,7 @@ function debugLine(origin, vector, color, drawValue) {
     ctx.stroke()
 
     if(drawValue) {
-        ctx.font = '11px arial'
+        ctx.font = '11px LipbyChonk'
         ctx.fillText(vector.x + '|' + vector.y, origin.x, origin.y)
     }
 
