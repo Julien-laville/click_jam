@@ -1,4 +1,5 @@
 <link rel="stylesheet" href="src/game.css"></link>
+
 <div id="scoreContent"></div>
 <div class="agents">
     <div id="AGENT_0" class="agent agent-status" onclick="agentAction(0)">MO-5</div>
@@ -7,11 +8,25 @@
 </div>
 
 <div id="agentPanel" class="agent-panel">
-    <div onclick="kill()">KILL</div>
+    <div onclick="kill()">Kill</div>
+    <div onclick="freeze()">Freeze</div>
 </div>
 
 <div id="information"></div>
 <canvas id="screen"></canvas>
+
+<div id="splashScreen">
+
+    # Ceci est une simulation <br>
+    #
+    #
+
+
+    # click here to start <br>
+
+
+</div>
+
 
 <script>
     var screenWidth = window.innerWidth

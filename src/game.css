@@ -1,3 +1,8 @@
+@font-face{
+    font-family: "LipbyChonk";
+    src: url('./LipbyChonk.ttf');
+}
+
 :root {
     --clear:#FFF;
     --dark:#000
@@ -5,12 +10,21 @@
 }
 
 * {
+    font-family: "LipbyChonk";
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-
+#splashScreen {
+    top:0;
+    position: absolute;
+    background: var(--dark);
+    width: 100%;
+    min-height: 100vh;
+    color: var(--clear);
+    padding: 50px;
+}
 
 CANVAS {
     
@@ -38,7 +52,7 @@ CANVAS {
     text-align: center;
     line-height: 50px;
     cursor: pointer;
-    font-size: 11px;
+    font-size: 16px;
 }
 
 .agent--active {
