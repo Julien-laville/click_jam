@@ -5,8 +5,8 @@
 
 ### Gameplay
  - random walk
- - fear
- - bubble
+ - fear x
+ - bubble x
  - moar ia
   - altair 8800
   - apple I
