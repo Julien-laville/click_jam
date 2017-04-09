@@ -13,23 +13,6 @@ screen.height = screenHeight
 var ctx =  screen.getContext('2d')
 var debug = true
 
-
-
-/*
- Mo5 is stupid, just occasionally say is own name move like an alcoolic collect has he enter on ressource radius
- */
-AGENT_MO = 0
-/*
- MAC is a little bit clever, he stop when he is within range of resource or else walk randomly
-*/
-AGENT_MAC = 1
-
-/*
-COMODORE 64 is the first clever IA, seeking for the nearest resource
-*/
-AGENT_64 = 2
-
-
 AGENT_SPEED = .5
 
 FEAR_RANGE = 300
@@ -54,10 +37,12 @@ window.onkeypress =function(e) {
             //pause
             cancelAnimationFrame(frameHandler)
             gameState = GAME_STATE_PAUSE
+            pauseScreen.style.display = 'block'
         } else {
             //run 
             loop()
             gameState = GAME_STATE_RUN
+            pauseScreen.style.display = 'none'
         }
     }
 }
@@ -69,6 +54,22 @@ screen.onclick = function(event) {
 
 splashScreen.onclick = function(event) {
     splashScreen.style.display = 'none'
+    stopTypeWritter()
+    loop()
+}
+
+function agentHover(agentId) {
+    agentInfo.classList.add('agentInfo--hover')
+    agentInfo.innerHTML = `
+        <h3>${agentDefinitions[agentId].name}</h3>
+        ${agentDefinitions[agentId].description} <br>
+        
+        Price : ${agentDefinitions[agentId].price}
+    `
+}
+
+function agentLeave() {
+    agentInfo.classList.remove('agentInfo--hover')
 }
 
 
@@ -82,12 +83,24 @@ window.onresize = function() {
 var score = 0
 var agents = []
 var resources = []
-function Resource(pos,total,clickPoint) {
+
+agentDefinitions.forEach(function(ad, i) {
+    agents.push(new Agent(ad, i))
+    agentContainer.innerHTML += `
+        <div id="AGENT_${ad.id}" class="agent agent-status" onclick="agentAction(${ad.id})" onmouseleave="agentLeave()" onmouseover="agentHover(${ad.id})">${ad.name}</div>
+    `
+})
+
+
+
+
+function Resource(pos,total,clickPoint, isActive) {
     this.pos = pos
     this.clickPoint = clickPoint
     this.total = total
     this.available = total
-    this.isActive = true
+    this.isActive = isActive
+    this.isCorrupted = false 
 }
 
 Resource.prototype.isClicked = function(event) {
@@ -129,12 +142,17 @@ Resource.prototype.destroy = function() {
 }
 
 for(var i = 0; i < ressourcesPositions.length; i++) {
-    resources.push(new Resource(ressourcesPositions[i], 10 * (i + 1), 1))
+    resources.push(new Resource(ressourcesPositions[i], 10 * (i + 1), 1, i === 0))
 }
 
-function Agent(type) {
+function Agent(def, agentsPos) {
+    this.specials = def.specials
+    this.specialFunctions = def.specialFunctions
+    this.specialVars = def.specialVars
+    
     this.price = 0
-    this.type = type
+    this.type = def.id
+    this.agentsPos = agentsPos 
     this.isActive = false
     this.pos = new v2d(0,0)
     this.speed = new v2d(0.6, 0.6)
@@ -144,38 +162,56 @@ function Agent(type) {
     this.collectTime = 1000
     this.collectCD = 0
     this.fearOrigin = new v2d(0,0)
+    this.paranoia = 0
 }
 
+var selectSquare = new v2d()
+var subSquare = new v2d(5,5)
 Agent.prototype.draw = function() {
     if(this.isActive === true) {
         square(this.pos, AGENT_SIZE)
-
+            
         if(this.isSelected === true) {
-            emptySquare(this.pos, AGENT_SIZE + 10)
+            selectSquare.setVector(this.pos)
+            selectSquare.sub(subSquare)
+            emptySquare(selectSquare, AGENT_SIZE + 10)
         }
-
 
         if(debug === true) {
             debugLine(this.pos,this.speed, '#f00', true)
         }
 
         bar(this.pos, new v2d(40,10), (this.collectTime - this.collectCD) / this.collectTime * 100)
+        this.faceDrawer()
 
     }
 }
 
-Agent.prototype.isClicked = function(event) {
-    console.log( )
 
+Agent.prototype.isClicked = function(event) {
     if((event.pageX - this.pos.x - screen.offsetLeft < AGENT_SIZE) && (event.pageX - this.pos.x - screen.offsetLeft > 0) && (event.pageY - this.pos.y- screen.offsetTop < AGENT_SIZE) && (event.pageY - this.pos.y- screen.offsetTop > 0)) { // && Math.abs(
         return true
     }
     return false
 }
 
+function callSpecial(agentId, functionId) {
+    agents[agentId].specialFunctions[functionId].action.call(agents[agentId])
+}
+
 Agent.prototype.select = function () {
     this.isSelected = true
     agentPanel.classList.add('agent-panel--active')
+    agentPanel.innerHTML = ''
+    for(var i = 0; i < this.specialFunctions.length; i ++) {
+        agentPanel.innerHTML += `
+            <div onclick="callSpecial(${this.agentsPos}, ${i})">${this.specialFunctions[i].label}</div>
+        `        
+    }
+    agentPanel.innerHTML += `
+        <div onclick="kill()">Kill</div>
+        <div onclick="freeze()">Medicate</div>
+    `
     currentAgent = this
 }
 
@@ -203,6 +239,7 @@ function kill() {
 
 var fearVector = new v2d(0,0)
 Agent.prototype.live = function(delta) {
+    
     if(this.collectCD > 0) {
         this.collectCD -= delta
     }
@@ -226,59 +263,8 @@ Agent.prototype.live = function(delta) {
 
             return
         }
-
-        if(this.type === AGENT_MO) {
-            //rand aim
-            if(this.pos.x < 0 || this.pos.x > screenWidth - AGENT_SIZE) {
-                this.speed.x = -this.speed.x
-            }
-            if(this.pos.y < 0 || this.pos.y > screenHeight - AGENT_SIZE) {
-                this.speed.y = -this.speed.y
-            }
-            this.pos.add(this.speed)
-        }
-
-        if(this.type === AGENT_MAC) {
-            var ressOnRange = false
-            for(var i = 0; i < resources.length; i ++) {
-                if(resources[i].isActive === true && resources[i].pos.stance(this.pos) < this.collectRadius) {
-                    ressOnRange = true
-                }
-            }
-            if(ressOnRange === false) {
-                if(this.pos.x < 0 || this.pos.x > screenWidth - AGENT_SIZE) {
-                    this.speed.x = -this.speed.x
-                }
-                if(this.pos.y < 0 || this.pos.y > screenHeight - AGENT_SIZE) {
-                    this.speed.y = -this.speed.y
-                }
-                this.pos.add(this.speed)
-            }
-        }
-
-        if(this.type === AGENT_64) {
-            var nearRess = resources[0]
-            var minStance = this.pos.stance(nearRess.pos)
-            var stance = 0
-            for(var i = 1; i < resources.length; i ++) {
-                if(resources[i].isActive) {
-                    var stance = this.pos.stance(resources[i].pos)
-                    if(this.pos.stance(resources[i].pos) < minStance) {
-                        minStance = stance
-                        nearRess = resources[i]
-                    }
-                }
-            }
-
-            this.speed.setVector(nearRess.pos)
-            this.speed.sub(this.pos)
-            this.speed.normalize()
-            this.speed.scale(AGENT_SPEED)
-            if(minStance > this.collectRadius) {
-                this.pos.add(this.speed)
-            }
-        }
-
+        
+        this.specials.move.call(this)
 
         for(var j = 0; j < resources.length; j++) {
             if(this.pos.stance(resources[j].pos) < this.collectRadius && this.isIddle === true) {
@@ -308,13 +294,10 @@ Agent.prototype.fear = function(fearOrigin) {
 }
 
 Agent.prototype.activate = function() {
-    document.getElementById('AGENT_' + this.type).classList.add('agent--active')
+    document.getElementById('AGENT_' + this.agentsPos).classList.add('agent--active')
     this.isActive = true
 }
 
-agents.push(new Agent(AGENT_MO))
-agents.push(new Agent(AGENT_MAC))
-agents.push(new Agent(AGENT_64))
 
 function agentAction(agentID) {
     var agent = agents[agentID]
@@ -336,6 +319,10 @@ function updateResources() {
         }
     }
     if(availableResources > 1) {
+        stepResource ++
+        if(stepResource % 10 === 0) {
+            toActivate.isCorrupted = true    
+        }
         toActivate = freeResources[Math.floor(Math.random()*availableResources)]
         toActivate.isActive = true
         toActivate.available = toActivate.total
@@ -376,8 +363,7 @@ function loop() {
     information.innerHTML = (1.0/(delta/1000)).toFixed(1)
 
     screen.width+=0
-
-    grid(100)
+    grid(50)
 
     for(var i = 0; i < agents.length; i++) {
         agents[i].live(delta)
@@ -391,30 +377,28 @@ function loop() {
         agents[i].draw()
     }
     
-    scoreContent.innerHTML = score
+    scoreContent.innerHTML = `Data ${score}`
     frameHandler = requestAnimationFrame(loop)
     time = performance.now()
 }
 
-loop()
-//draw helper
-
 
 function grid(cellSize) {
     for(var i = 1; i < screenWidth / cellSize; i++) {
-        ctx.moveTo(i*cellSize,0)
         ctx.beginPath()
+        ctx.moveTo(i*cellSize,0)
         ctx.lineTo(i*cellSize, screenHeight)
 		ctx.strokeStyle = dark
-
-		ctx.stroke()
+        i%4 === 0 ? ctx.lineWidth = 2 : ctx.lineWidth = 1 
+        ctx.stroke()
     }
 
     for(var i = 1; i < screenHeight / cellSize; i++) {
-        ctx.moveTo(0,i*cellSize)
         ctx.beginPath()
+        ctx.moveTo(0,i*cellSize)
         ctx.lineTo(screenWidth, i * cellSize)
         ctx.strokeStyle = dark
+        i%4 === 0 ? ctx.lineWidth = 2 : ctx.lineWidth = 1 
         ctx.stroke()
     }
 }
@@ -436,11 +420,11 @@ function circle(pos,radius, width, style) {
 
 function bar(pos, box, prop) {
     ctx.fillStyle = dark
-    ctx.fillRect(pos.x, pos.y, box.x, box.y)
+    ctx.fillRect(pos.x, pos.y - 25, box.x, box.y)
     ctx.fillStyle = clear
-    ctx.fillRect(pos.x+1, pos.y+1, box.x - 2, box.y-2)
+    ctx.fillRect(pos.x+1, pos.y - 24, box.x - 2, box.y-2)
     ctx.fillStyle = dark
-    ctx.fillRect(pos.x + 2, pos.y + 2, prop / 100 * box.x  , box.y - 4)
+    ctx.fillRect(pos.x + 2, pos.y -23, prop / 110 * box.x  , box.y - 4)
     ctx.stroke()
 }
 
@@ -475,9 +459,23 @@ function line(origin, destination) {
     ctx.lineTo(destination.x, destination.y)
 }
 
+var dotSquare = new v2d(0,0)
 function bubble(pos, message) {
-    ctx.rect(pos.x, pos.y, 300, 50)
-    ctx.stroke()
+    dotSquare.setPoint(pos.x - 5, pos.y - 5)
+    square(dotSquare, 5)
+    dotSquare.setPoint(pos.x + 310, pos.y - 5)
+    square(dotSquare, 5)
+    dotSquare.setPoint(pos.x - 5, pos.y + 60)
+    square(dotSquare, 5)
+    dotSquare.setPoint(pos.x + 310, pos.y + 60)
+    square(dotSquare, 5)
+    ctx.fillStyle = dark
+    ctx.fillRect(pos.x + 5, pos.y, 300, 5)
+    ctx.fillRect(pos.x + 305, pos.y + 5, 5, 50)
+    ctx.fillRect(pos.x, pos.y + 5, 5, 50)
+    ctx.fillRect(pos.x + 5, pos.y + 55, 300, 5)
+    
+    
     ctx.textAlign="center";
     ctx.fillText(message, pos.x + 150, pos.y + 25, 300)
 }
@@ -515,3 +513,34 @@ function debugLine(origin, vector, color, drawValue) {
     }
 
 }
+
+Agent.prototype.faceDrawer = function() {
+    ctx.fillStyle = clear   
+    ctx.fillRect(this.pos.x -1, this.pos.y + 5, AGENT_SIZE + 2 , 14)
+    ctx.fillStyle = dark
+    
+    if(this.paranoia === 0) {    
+        ctx.fillRect(this.pos.x+5, this.pos.y + 9, 10, 5)
+        ctx.fillRect(this.pos.x+26, this.pos.y + 9, 10, 5)
+    } 
+    if(this.paranoia > 0 && this.paranoia < 10) {
+        
+    } 
+    if(this.paranoia >= 10 && this.paranoia < 90) {
+        
+    } 
+    if(this.paranoia >= 90) {
+        
+    }
+    
+    if(this.paranoia < 0 && this.paranoia > -10) {
+        
+    }
+    if(this.paranoia <= -10 && this.paranoia > -90) {
+        
+    }
+    if(this.paranoia <= -90) {
+        
+    } 
+}
+

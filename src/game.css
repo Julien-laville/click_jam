@@ -26,6 +26,17 @@
     padding: 50px;
 }
 
+#pauseScreen {
+    top:0;
+    text-align: center;
+    padding-top: 50vh;
+    position: absolute;
+    background: var(--dark);
+    width: 100%;
+    min-height: 100vh;
+    color: var(--clear);
+}
+
 CANVAS {
     
 }
@@ -44,15 +55,15 @@ CANVAS {
 }
 
 .agent {
-    width: 50px;
-    height: 50px;
+    width: 80px;
+    height: 80px;
     background: var(--dark);
     color:var(--clear);
     margin-bottom: 2px;
     text-align: center;
     line-height: 50px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 9px;
 }
 
 .agent--active {
@@ -70,8 +81,15 @@ CANVAS {
     display: block;
 }
 
-#agentPanel {
-    border:1px solid red;
+
+#agentInfo.agentInfo--hover {
+    display: block;
+}
+
+#agentPanel, #agentInfo {
+    padding: 10px;
+    color:var(--clear);
+    background: var(--dark);
     bottom: 0;
     position: absolute;
     height: 100px;

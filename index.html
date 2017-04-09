@@ -2,30 +2,27 @@
 
 <div id="scoreContent"></div>
 <div class="agents">
-    <div id="AGENT_0" class="agent agent-status" onclick="agentAction(0)">MO-5</div>
-    <div id="AGENT_1" class="agent agent-status" onclick="agentAction(1)">APPLE - I</div>
-    <div id="AGENT_2" class="agent agent-status" onclick="agentAction(2)">C-64</div>
+    MARKET
+    <div id="agentContainer"></div>
 </div>
 
 <div id="agentPanel" class="agent-panel">
-    <div onclick="kill()">Kill</div>
-    <div onclick="freeze()">Freeze</div>
+</div>
+
+<div id="agentInfo">
+
 </div>
 
 <div id="information"></div>
 <canvas id="screen"></canvas>
 
-<div id="splashScreen">
 
-    # Ceci est une simulation <br>
-    #
-    #
-
-
-    # click here to start <br>
-
-
+<div id="pauseScreen" style="display:none;">
+    GAME PAUSED<br>
+    (press space)
 </div>
+
+<div id="splashScreen"></div>
 
 
 <script>
@@ -35,4 +32,6 @@
 
 <script src="src/v2d.js"></script>
 <script src="src/data.js"></script>
+<script src="agent-definitions.js"></script>
+<script src="story.js"></script>
 <script src="src/game.js"></script>
