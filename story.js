@@ -57,7 +57,7 @@ function nextChapter() {
     splashScreen.innerHTML = ''
     currentLetter = 0
     currentChapter++
-    if(currentChapter < p.length) {
+    if(currentChapter < story.length) {
         p = story[currentChapter]
         iHandler = setInterval(typewriter, TYPEWRITER_DELAY)
     }
