@@ -14,13 +14,13 @@ var agentDefinitions = [
                 this.pos.add(this.speed)
             }  
         },
-        skill2 : function() {
-            // trap
-            
+         skill : function() {
+             this.specialVars.rayStep
         },
-        skill1 : function() {
-            // afterBurner
-        },
+         specialVars : {
+             rayStep : 0
+         },
+        label : "Ray gun",
         description : 'I know my own name'
     }, {
         id : 1,
@@ -45,12 +45,10 @@ var agentDefinitions = [
                 }
             }  
         },
-        skill1 : function() {
+        skill : function() {
             // freeze aoe  
         },
-        skill2 : function() {
-            // freeze ray
-        },
+        label : "Freeze",
         description : 'In garage we trust'
     }, {
         id : 2,
@@ -80,12 +78,10 @@ var agentDefinitions = [
                 }
             }  
         },
-        skill1 : function() {
+        skill : function() {
             // taunt   
-        }, 
-        skill2 : function() {
-            // shield
         },
+        label : "Taunt",
         description : '64 Kilo Bytes for your mom'
     }, {
         id : 3,
@@ -107,12 +103,10 @@ var agentDefinitions = [
         specialVars : {
             isWarpEnabled : false
         },
-        skill1 : function() {
+        skill : function() {
             // warp    
-        }, 
-        skill2 : function() {
-            // beacon
         },
+        label : "Warp",
         description : 'Best price, screen and keyboard in options'
     }
 ]

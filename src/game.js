@@ -176,7 +176,8 @@ for(var i = 0; i < ressourcesPositions.length; i++) {
 
 function Agent(def, agentsPos) {
     this.specials = def.specials
-    this.specialFunctions = def.specialFunctions
+    this.skill = def.skill
+    this.label = def.label
     this.specialVars = def.specialVars
     
     this.price = 0
@@ -192,6 +193,8 @@ function Agent(def, agentsPos) {
     this.collectCD = 0
     this.fearOrigin = new v2d(0,0)
     this.paranoia = 0
+
+    this.skillCD = -1
 }
 
 var selectSquare = new v2d()
@@ -224,19 +227,18 @@ Agent.prototype.isClicked = function(event) {
     return false
 }
 
-function callSpecial(agentId, functionId) {
-    agents[agentId].specialFunctions[functionId].action.call(agents[agentId])
+function callSpecial(agentPos) {
+    agents[agentPos].skill.call(agents[agentPos])
 }
 
 Agent.prototype.select = function () {
     this.isSelected = true
     agentPanel.classList.add('agent-panel--active')
     agentPanel.innerHTML = ''
-    for(var i = 0; i < this.specialFunctions.length; i ++) {
-        agentPanel.innerHTML += `
-            <div onclick="callSpecial(${this.agentsPos}, ${i})">${this.specialFunctions[i].label}</div>
-        `        
-    }
+    agentPanel.innerHTML += `
+        <div onclick="callSpecial(${this.agentsPos})">${this.label}</div>
+    `
+
     agentPanel.innerHTML += `
         <div onclick="kill()">Kill</div>
         <div onclick="freeze()">Medicate</div>
