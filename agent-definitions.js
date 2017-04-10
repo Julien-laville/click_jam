@@ -14,12 +14,13 @@ var agentDefinitions = [
                 this.pos.add(this.speed)
             }  
         },
-        specialFunctions : [{
-            action : function(me) {
-                me.isMedic = true
-            },
-            label : "Medic !",
-        }],
+        skill2 : function() {
+            // trap
+            
+        },
+        skill1 : function() {
+            // afterBurner
+        },
         description : 'I know my own name'
     }, {
         id : 1,
@@ -44,12 +45,12 @@ var agentDefinitions = [
                 }
             }  
         },
-        specialFunctions : [{
-            action : function(me) {
-                me.isMedic = true
-            },
-            label : "Medic !",
-        }],
+        skill1 : function() {
+            // freeze aoe  
+        },
+        skill2 : function() {
+            // freeze ray
+        },
         description : 'In garage we trust'
     }, {
         id : 2,
@@ -79,13 +80,12 @@ var agentDefinitions = [
                 }
             }  
         },
-        specialFunctions : [{
-            action : function() {
-                me.warp = true
-            },
-            label : "Enable WAPR",
-        }],
-        
+        skill1 : function() {
+            // taunt   
+        }, 
+        skill2 : function() {
+            // shield
+        },
         description : '64 Kilo Bytes for your mom'
     }, {
         id : 3,
@@ -107,20 +107,12 @@ var agentDefinitions = [
         specialVars : {
             isWarpEnabled : false
         },
-        specialFunctions : [{
-            action : function() {
-                this.specialFunctions[0].label = "Collector online"
-                this.specialVars.isCollectorEnabled = true
-            },
-            label : "Buy collector",
-        }, {
-            action : function() {
-                this.specialFunctions[1].label = "Warp online"
-                this.specialVars.isWarpEnabled = true
-            },
-            label : "Buy Moving module"        
-        }],
-        
+        skill1 : function() {
+            // warp    
+        }, 
+        skill2 : function() {
+            // beacon
+        },
         description : 'Best price, screen and keyboard in options'
     }
 ]

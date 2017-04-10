@@ -15,6 +15,11 @@ function v2d(x,y) {
         this.y = v.y
     }
     
+    v2d.prototype.copy = function(v) {
+        return new v2d(v.x, v.y)
+        
+    }
+    
     v2d.prototype.X = function(o){
         this.x=this.x*o.x;
         this.y=this.y*o.y;
@@ -27,6 +32,7 @@ function v2d(x,y) {
     v2d.prototype.add = function(o){
         this.x=this.x+o.x;
         this.y=this.y+o.y;
+        return this;
     }
     v2d.prototype.sub = function(o){
         this.x=this.x-o.x;

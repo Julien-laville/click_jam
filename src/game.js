@@ -23,9 +23,6 @@ GAME_STATE_RUN = 1
 GAME_STATE_PAUSE = 2
 GAME_STATE_MAIN = 3
 
-
-
-
 var frameHandler=-1
 var playerCollectSize = 1
 var currentAgent = null
@@ -90,6 +87,38 @@ agentDefinitions.forEach(function(ad, i) {
         <div id="AGENT_${ad.id}" class="agent agent-status" onclick="agentAction(${ad.id})" onmouseleave="agentLeave()" onmouseover="agentHover(${ad.id})">${ad.name}</div>
     `
 })
+
+
+for(i = 0; i < 10; i++) {
+    agents.push(new Corruptor(i === 0))
+}
+function Corruptor(isActive) {
+    this.pos = new v2d(screenWidth /2,screenHeight + 40)
+    this.isActive = isActive  
+    this.speed = new v2d(1, 1)
+} 
+var shorterAgentStance
+var target
+Corruptor.prototype.live = function() {
+    this.pos.add(this.speed)
+    nearAgent = agents[0]
+    shorterAgentStance = agents[0].pos.stance(this.pos)
+    for(var i = 0; i < agents.length; i ++) {
+        if(agents[i].pos.stance(this.pos) < shorterAgentStance) {
+            target = agents[i]
+        }
+    }
+}
+
+Corruptor.prototype.draw = function() {
+    ctx.beginPath()
+    ctx.moveTo(this.pos.x, this.pos.y)
+    ctx.lineTo(this.pos.x-20, this.pos.y+40)
+    ctx.lineTo(this.pos.x+20, this.pos.y+40)
+    ctx.fillStyle = dark
+    ctx.fill()
+}
+
 
 
 
@@ -259,7 +288,8 @@ Agent.prototype.live = function(delta) {
             fearVector.normalize()
             fearVector.scale(AGENT_SPEED * 1.3)
             this.pos.add(fearVector)
-            bubble(this.pos, FEAR_BUBBLE)
+            var bubblePos = this.pos.copy()
+            bubble(bubblePos.add(new v2d(-150,-30)), FEAR_BUBBLE)
 
             return
         }
