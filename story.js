@@ -1,8 +1,7 @@
 TYPEWRITER_DELAY = 100
 
 var story = [
-    `
-        Connecting ...
+    `Connecting ...<br/>test
     `,
     `
         Session Open.
@@ -11,11 +10,11 @@ var story = [
         Collecting Data... 
     `,
     `
-        Automation script corrupted<br>
+        Automation script corrupted <br>
         Start interface
     `,
     `
-        Left click to collect <img src="mouse-left.png">
+        Left click to collect <img src="mouse-left.png"><br>
         Data can be excanged on the market to buy bots<br>
         Be aware that bots are very advanced IA
         What if they realise what they realy are
@@ -26,21 +25,28 @@ var story = [
 ]
 var iHandler = -1
 var currentChapter = 0  
-var currentLetterPos = 0
+var currentLetter = 0
+var strLen = 1
 var p = story[0]
 function typewriter() {
-    currentLetterPos++
-    if(p[currentLetterPos] === '<') {
-        while(p[currentLetterPos] != '>') {
-            currentLetterPos ++
-        }
-    }
-        
-    splashScreen.insertAdjacentHTML('beforeend',p.substr(0,currentLetterPos))
-    if(currentLetterPos === p.length) {
+
+    if(currentLetter === p.length) {
         clearInterval(iHandler)
         setTimeout(nextChapter,300)
     }
+
+    if(p[currentLetter] === '<') {
+        while(p[currentLetter + strLen - 1] !== '>') {
+            strLen++
+        }
+    }
+    splashScreen.insertAdjacentHTML('beforeend',p.substr(currentLetter,strLen))
+    if(strLen > 1) {
+        currentLetter+=(strLen - 1)
+    }
+    strLen = 1
+
+    currentLetter++
 }
 
 function stopTypeWritter() {
@@ -49,9 +55,13 @@ function stopTypeWritter() {
 
 function nextChapter() {
     splashScreen.innerHTML = ''
-    currentLetterPos = 0
-    p = story[++currentChapter]
-    iHandler = setInterval(typewriter, TYPEWRITER_DELAY)
+    currentLetter = 0
+    currentChapter++
+    if(currentChapter < p.length) {
+        p = story[currentChapter]
+        iHandler = setInterval(typewriter, TYPEWRITER_DELAY)
+    }
+
 }
 
 iHandler = setInterval(typewriter, TYPEWRITER_DELAY)
