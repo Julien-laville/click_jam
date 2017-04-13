@@ -16,9 +16,10 @@ ctx.imageSmoothingEnabled = false
 var debug = true
 
 AGENT_SPEED = .5
-
+DISABLE_RANGE = 30
 FEAR_RANGE = 300
 FEAR_COOLDOWN = 4000
+FREEZE_TIME = 6000
 FEAR_BUBBLE = "HaAAAaaaAAAAaaaa"
 
 GAME_STATE_RUN = 1
@@ -95,15 +96,15 @@ for(i = 0; i < 10; i++) {
     agents.push(new Coruptor(i === 0))
 }
 function Coruptor(isActive) {
-    this.pos = new v2d(screenWidth /2,screenHeight + 40)
+    this.pos = new v2d(screenWidth /2,screenHeight /2)//+ 40)
     this.isActive = isActive  
     this.speed = new v2d(500, 500)
 } 
 var shorterAgentStance
 var target
 var speedVector = new v2d()
+
 Coruptor.prototype.live = function() {
-    this.pos.add(this.speed)
     nearAgent = agents[0]
     shorterAgentStance = agents[0].pos.stance(this.pos)
     for(var i = 0; i < agents.length; i ++) {
@@ -111,10 +112,14 @@ Coruptor.prototype.live = function() {
             target = agents[i]
         }
     }
-    speedVector.setVector(agent.pos)
+    if(nearAgent.pos.stance(this.pos) < DISABLE_RANGE && nearAgent.freezeTime < 0) {
+        nearAgent.freeze()
+    }
+    speedVector.setVector(nearAgent.pos)
     speedVector.sub(this.pos)
-    speedVector.setNorm(0.7)
-    //this.pos.add(speedVector)
+    speedVector.setNorm(0.3)
+    this.pos.add(speedVector)
+
 }
 
 Coruptor.prototype.draw = function() {
@@ -199,8 +204,7 @@ function Agent(def, agentsPos) {
     this.collectTime = 1000
     this.collectCD = 0
     this.fearOrigin = new v2d(0,0)
-    this.paranoia = 0
-
+    this.freezeTime = -1
     this.skillCD = -1
 }
 
@@ -259,6 +263,9 @@ Agent.prototype.unSelect = function () {
     currentAgent = null
 }
 
+Agent.prototype.freeze = function () {
+    this.freezeTime = FREEZE_TIME
+}
 
 Agent.prototype.reset = function() {
     this.isActive = false
@@ -282,11 +289,15 @@ Agent.prototype.live = function(delta) {
         this.collectCD -= delta
     }
 
+    if(this.freezeTime > 0) {
+        this.freezeTime -= delta
+    }
+
     if(this.collectCD <= 0) {
         this.isIddle = true
     }
 
-    if(this.isActive === true) {
+    if(this.isActive === true && this.freezeTime < 0) {
 
         // if fear : HaAAAaaaaAaaaaaaaaAAaa
         if(this.fearCooldown >= 0) {
