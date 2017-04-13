@@ -11,6 +11,8 @@ var screen = document.getElementById('screen')
 screen.width = screenWidth
 screen.height = screenHeight
 var ctx =  screen.getContext('2d')
+ctx.imageSmoothingEnabled = false
+
 var debug = true
 
 AGENT_SPEED = .5
@@ -90,16 +92,17 @@ agentDefinitions.forEach(function(ad, i) {
 
 
 for(i = 0; i < 10; i++) {
-    agents.push(new Corruptor(i === 0))
+    agents.push(new Coruptor(i === 0))
 }
-function Corruptor(isActive) {
+function Coruptor(isActive) {
     this.pos = new v2d(screenWidth /2,screenHeight + 40)
     this.isActive = isActive  
-    this.speed = new v2d(1, 1)
+    this.speed = new v2d(500, 500)
 } 
 var shorterAgentStance
 var target
-Corruptor.prototype.live = function() {
+var speedVector = new v2d()
+Coruptor.prototype.live = function() {
     this.pos.add(this.speed)
     nearAgent = agents[0]
     shorterAgentStance = agents[0].pos.stance(this.pos)
@@ -108,9 +111,13 @@ Corruptor.prototype.live = function() {
             target = agents[i]
         }
     }
+    speedVector.setVector(agent.pos)
+    speedVector.sub(this.pos)
+    speedVector.setNorm(0.7)
+    //this.pos.add(speedVector)
 }
 
-Corruptor.prototype.draw = function() {
+Coruptor.prototype.draw = function() {
     ctx.beginPath()
     ctx.moveTo(this.pos.x, this.pos.y)
     ctx.lineTo(this.pos.x-20, this.pos.y+40)
